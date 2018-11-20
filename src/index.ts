@@ -1,12 +1,29 @@
 import 'reflect-metadata'
 import {createKoaServer} from 'routing-controllers'
 import PageController from './pages/controller'
+import UserController from './users/controller'
+import LoginController from './logins/controller'
+import {Action} from 'routing-controllers'
+import {verify} from './jwt'
+
 import setupDb from './db'
 
 const app = createKoaServer({
   controllers: [
-    PageController
-  ]
+    PageController,
+    UserController,
+    LoginController
+  ],
+  authorizationChecker: (action: Action) => {
+    const header: string = action.request.headers.authorization
+  
+    if (header && header.startsWith('Bearer ')) {
+      const [ , token ] = header.split(' ')
+      return !!(token && verify(token))
+    }
+    // ...
+    return false
+  }
 })
 
 setupDb()
